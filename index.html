@@ -206,6 +206,47 @@
 
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
+  // ---- gameplay keys --------------------------------------------------
+  // The engine's compiled defaults are Z/X/C/A/S/D on the arrows. In gameplay
+  // (cursor hidden) these physical keys are translated so the modern layout
+  // works out of the box; in menus (cursor shown) nothing is touched, so the
+  // rebind screen records and prints exactly the key you press.
+  var PLAY_KEYS = {
+    Space:   { key: "z", code: "KeyZ", keyCode: 90 },
+    KeyW:    { key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+    KeyA:    { key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+    KeyS:    { key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+    KeyD:    { key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    KeyJ:    { key: "x", code: "KeyX", keyCode: 88 },
+    KeyK:    { key: "c", code: "KeyC", keyCode: 67 },
+    KeyL:    { key: "a", code: "KeyA", keyCode: 65 },
+    ShiftLeft:  { key: "s", code: "KeyS", keyCode: 83 },
+    ShiftRight: { key: "s", code: "KeyS", keyCode: 83 },
+    KeyE:    { key: "d", code: "KeyD", keyCode: 68 }
+  };
+
+  function inMenu() {
+    var c = document.getElementById("unity-canvas") || document.querySelector("canvas");
+    var cur = (c && c.style && c.style.cursor) || "";
+    return cur === "default" || cur === "pointer" || cur === "auto";
+  }
+
+  function translateKey(e) {
+    if (inMenu()) return;
+    var alias = PLAY_KEYS[e.code];
+    if (!alias) return;
+    var props = { key: alias.key, code: alias.code, keyCode: alias.keyCode, which: alias.keyCode, charCode: alias.keyCode };
+    Object.keys(props).forEach(function (name) {
+      try {
+        Object.defineProperty(e, name, { configurable: true, get: function () { return props[name]; } });
+      } catch (err) { /* frozen event */ }
+    });
+    e.preventDefault();
+  }
+
+  window.addEventListener("keydown", translateKey, true);
+  window.addEventListener("keyup", translateKey, true);
+
   // ---- keyboard -------------------------------------------------------
   // The engine owns its bindings. Rewriting Space into Z here made the
   // controls menu print Z and made rebinding bind Z, so nothing is rewritten
@@ -281,7 +322,7 @@
   // every cutscene stalls at "video load" and resumes a moment later. Rather
   // than showing a frozen frame, the page watches the engine's own log and
   // fades through a black loading card while that happens.
-  var LOADING_ON = [/Waiting for CinematicVideoPlayer/i, /Skipped cinematic/i];
+  var LOADING_ON = [/Waiting for CinematicVideoPlayer/i, /Skipped cinematic/i, /Setting skip mode:/i, /Cinematic/i];
   var LOADING_OFF = [/Cinematics are finished/i, /Skipping cinematic/i, /Loaded cinematic/i];
   var loadingWatch = { visible: false, shownAt: 0, hideTimer: 0, failsafe: 0, hold: 1300 };
   var NOTICE_KEY = "hk-cutscene-notice";
@@ -358,10 +399,16 @@
     });
   }
 
+  var skipUntil = 0;
+
   function startSkipSpam() {
+    skipUntil = Date.now() + 25000;
     if (skipTimer) return;
     pressSkip();
-    skipTimer = setInterval(pressSkip, 220);
+    skipTimer = setInterval(function () {
+      if (Date.now() > skipUntil) { stopSkipSpam(); return; }
+      pressSkip();
+    }, 180);
   }
 
   function stopSkipSpam() {
