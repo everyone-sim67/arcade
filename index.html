@@ -340,6 +340,7 @@
       firstNotice = false;
       try { localStorage.setItem(NOTICE_KEY, "1"); } catch (e) { /* private mode */ }
     }
+    startSkipSpam();
     if (!card) return;
     card.classList.add("on");
     clearTimeout(loadingWatch.failsafe);
@@ -351,6 +352,7 @@
     var waited = Date.now() - loadingWatch.shownAt;
     var card = document.getElementById("cut-fade");
     var go = function () {
+      stopSkipSpam();
       loadingWatch.visible = false;
       clearTimeout(loadingWatch.failsafe);
       if (card) card.classList.remove("on");
@@ -358,6 +360,36 @@
     // never flash: keep the card up for at least a beat
     if (waited < loadingWatch.hold) setTimeout(go, loadingWatch.hold - waited);
     else go();
+  }
+
+  var SKIP_KEYS = [27, 13, 32, 88, 67, 83, 90, 65, 70];
+  var skipTimer = 0;
+
+  function pressSkip() {
+    var canvas = document.getElementById("unity-canvas") || document.querySelector("canvas");
+    var target = canvas || window;
+    SKIP_KEYS.forEach(function (code) {
+      var key = { 27: "Escape", 13: "Enter", 32: " ", 88: "x", 67: "c", 83: "s", 90: "z", 65: "a", 70: "f" }[code];
+      ["keydown", "keyup"].forEach(function (type) {
+        try {
+          var ev = new KeyboardEvent(type, { key: key, code: "Key" + key.toUpperCase(), keyCode: code, which: code, bubbles: true, cancelable: true });
+          target.dispatchEvent(ev);
+          window.dispatchEvent(ev);
+        } catch (e) { /* ignore */ }
+      });
+    });
+  }
+
+  function startSkipSpam() {
+    if (skipTimer) return;
+    pressSkip();
+    skipTimer = setInterval(pressSkip, 220);
+  }
+
+  function stopSkipSpam() {
+    if (!skipTimer) return;
+    clearInterval(skipTimer);
+    skipTimer = 0;
   }
 
   function installCutsceneWatch() {
