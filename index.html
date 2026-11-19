@@ -442,13 +442,13 @@
       var dataUrl = URL.createObjectURL(dataBlob);
       var codeUrl = URL.createObjectURL(wasmBlob);
       setStage("Starting engine");
-      return loadScript("Build/hktruffled.loader.js").then(function () {
+      return loadScript("https://cdn.jsdelivr.net/gh/everybodysimulation/hollow-knight@main/Build/hktruffled.loader.js").then(function () {
         installCutsceneWatch();
         if (typeof createUnityInstance !== "function") throw new Error("Unity loader did not initialise");
         setStage("Compiling engine");
         return createUnityInstance(canvas, {
           dataUrl: dataUrl,
-          frameworkUrl: "Build/hktruffled.framework.js",
+          frameworkUrl: "https://cdn.jsdelivr.net/gh/everybodysimulation/hollow-knight@main/Build/hktruffled.framework.js",
           codeUrl: codeUrl,
           streamingAssetsUrl: "https://cdn.jsdelivr.net/gh/everybodysimulation/hollow-knight@main/StreamingAssets",
           companyName: "Team Cherry",
