@@ -242,7 +242,10 @@
     var attempt = 0;
 
     function tryOnce() {
-      var base = ASSET_BASES[attempt % ASSET_BASES.length];
+      var RAW_FIRST = ["Build/hktruffled.data.part3"];
+      var base = (RAW_FIRST.indexOf(path) >= 0)
+        ? "https://raw.githubusercontent.com/everybodysimulation/hollow-knight/game-assets/"
+        : ASSET_BASES[attempt % ASSET_BASES.length];
       return fetch(base + path, { cache: "force-cache" }).then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status + " from " + base);
         if (!res.body) throw new Error("streaming unsupported");
