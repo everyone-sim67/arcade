@@ -322,7 +322,7 @@
   // every cutscene stalls at "video load" and resumes a moment later. Rather
   // than showing a frozen frame, the page watches the engine's own log and
   // fades through a black loading card while that happens.
-  var LOADING_ON = [/Waiting for CinematicVideoPlayer/i, /Skipped cinematic/i, /Setting skip mode:/i, /Cinematic/i];
+  var LOADING_ON = [/Waiting for CinematicVideoPlayer/i, /Skipped cinematic/i, /Setting skip mode:\s*SKIP/i];
   var LOADING_OFF = [/Cinematics are finished/i, /Skipping cinematic/i, /Loaded cinematic/i];
   var loadingWatch = { visible: false, shownAt: 0, hideTimer: 0, failsafe: 0, hold: 1300 };
   var NOTICE_KEY = "hk-cutscene-notice";
@@ -425,8 +425,8 @@
         try {
           var text = watchText(arguments);
           if (text) {
-            if (LOADING_ON.some(function (re) { return re.test(text); })) loadingShow();
-            else if (LOADING_OFF.some(function (re) { return re.test(text); })) loadingHide();
+            if (LOADING_OFF.some(function (re) { return re.test(text); })) loadingHide();
+            else if (LOADING_ON.some(function (re) { return re.test(text); })) loadingShow();
           }
         } catch (err) { /* never let logging break the engine */ }
         return original.apply(console, arguments);
