@@ -1,2 +1,0 @@
-# arcade
-Static player page
